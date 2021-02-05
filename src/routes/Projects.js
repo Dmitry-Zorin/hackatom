@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import {makeStyles} from '@material-ui/core/styles'
 import GridList from '@material-ui/core/GridList'
 import GridListTile from '@material-ui/core/GridListTile'
@@ -6,15 +6,14 @@ import GridListTileBar from '@material-ui/core/GridListTileBar'
 import ListSubheader from '@material-ui/core/ListSubheader'
 import IconButton from '@material-ui/core/IconButton'
 import InfoIcon from '@material-ui/icons/Info'
-import Img from "../img/project.png";
-import {navigate} from "@reach/router";
-import {Rating} from "@material-ui/lab";
+import Img from "../img/project.png"
+import {navigate} from "@reach/router"
+import {Rating} from "@material-ui/lab"
+import axios from "axios"
+import {amber, green, lightGreen, lime, orange} from "@material-ui/core/colors"
+import {Card, withWidth} from "@material-ui/core";
 
-const data = new Array(20).fill(0).map(() => ({
-    img: Img,
-    title: 'Название проекта',
-    project_id: 1
-}))
+const colors = [orange[500], amber[500], lime[500], lightGreen[500], green[500]]
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -25,7 +24,7 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: theme.palette.background.paper,
     },
     subheader: {
-        padding:  theme.spacing(1),
+        padding: theme.spacing(1),
         fontSize: 26,
         textAlign: 'center'
     },
@@ -34,12 +33,19 @@ const useStyles = makeStyles((theme) => ({
     },
 }))
 
-export const Projects = () => {
+export const Projects = withWidth()((props) => {
     const classes = useStyles()
+    const [projects, setProjects] = useState([])
+
+    useEffect(() => {
+        axios.get('/projects/get').then((res) => {
+            setProjects(res.data)
+        })
+    }, [])
 
     return (
-        <div className={classes.root}>
-            <GridList cellHeight={180}>
+        <Card className={classes.root}>
+            <GridList>
                 <GridListTile key="Subheader" cols={2} style={{height: 'auto'}}>
                     <ListSubheader
                         className={classes.subheader}
@@ -48,18 +54,21 @@ export const Projects = () => {
                         Список проектов
                     </ListSubheader>
                 </GridListTile>
-                {data.map((tile) => (
-                    <GridListTile key={tile.img}>
-                        <img src={tile.img} alt={tile.title}/>
+                {projects.length && projects.map((tile) => (
+                    <GridListTile key={tile._id}>
+                        <img src={tile.img || Img} alt={tile.title}/>
                         <GridListTileBar
-                            title={tile.title}
-                            subtitle={<Rating
-                                defaultValue={2 + 3 * Math.random()}
-                                precision={0.5}
-                                size='large'
-                            />}
+                            title={tile.title} style={{borderTop: `3px solid ${colors[tile.stage]}`}}
+                            subtitle={
+                                <Rating
+                                    defaultValue={2 + 3 * Math.random()}
+                                    precision={0.5}
+                                    size={props.width === 'xs' ? 'small' : 'large'}
+                                    readOnly
+                                />
+                            }
                             actionIcon={
-                                <IconButton aria-label={`info about ${tile.title}`} className={classes.icon} onClick={() => navigate(`projects/${tile.project_id}`)}>
+                                <IconButton className={classes.icon} onClick={() => navigate(`projects/${tile._id}`)}>
                                     <InfoIcon/>
                                 </IconButton>
                             }
@@ -67,6 +76,6 @@ export const Projects = () => {
                     </GridListTile>
                 ))}
             </GridList>
-        </div>
+        </Card>
     )
-}
+})

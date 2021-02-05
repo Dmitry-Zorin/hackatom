@@ -13,6 +13,9 @@ module.exports = new Schema(
         },
         stage: {
             type: Number
+        },
+        plan: {
+            type: String
         }
     }
 )

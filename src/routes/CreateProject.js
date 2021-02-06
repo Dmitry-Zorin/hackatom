@@ -1,4 +1,14 @@
-import {Box, Button, Card, FormControl, InputLabel, MenuItem, Select, TextField, Typography} from "@material-ui/core"
+import {
+    Box,
+    Button,
+    Card,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
+    Typography
+} from "@material-ui/core"
 import {makeStyles} from "@material-ui/core/styles"
 import {useCallback, useState} from "react"
 import {navigate} from "@reach/router"
@@ -36,6 +46,10 @@ const useStyles = makeStyles((theme) => ({
             border: '1px dashed rgba(0,0,0,0.6)',
             background: 'rgba(0, 0, 0, 0.01)'
         }
+    },
+    media: {
+        width: '100%',
+        maxHeight: '50vh'
     }
 }))
 
@@ -43,6 +57,8 @@ export const CreateProject = () => {
     const classes = useStyles()
     const [title, setTitle] = useState('')
     const [desc, setDesc] = useState('')
+    const [appArea, setAppArea] = useState('')
+    const [resources, setResources] = useState('')
     const [stage, setStage] = useState(0)
     const [plan, setPlan] = useState()
 
@@ -75,6 +91,23 @@ export const CreateProject = () => {
                     multiline
                     value={desc}
                     onChange={e => setDesc(e.target.value)}
+                    style={{whiteSpace: 'pre-wrap'}}
+                />
+                <TextField
+                    label="Область применения"
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    value={appArea}
+                    onChange={e => setAppArea(e.target.value)}
+                />
+                <TextField
+                    label="Необходимые ресурсы"
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    value={resources}
+                    onChange={e => setResources(e.target.value)}
                 />
                 <FormControl variant="outlined" fullWidth>
                     <InputLabel>Стадия</InputLabel>
@@ -105,7 +138,7 @@ export const CreateProject = () => {
                             {plan}
                         </Typography>
                         <IconButton onClick={() => setPlan(undefined)}>
-                            <DeleteIcon />
+                            <DeleteIcon/>
                         </IconButton>
                     </Box>
                 )}
@@ -114,7 +147,7 @@ export const CreateProject = () => {
                         Отмена
                     </Button>
                     <Button variant="contained" color="primary" onClick={() => {
-                        axios.post('/projects/add', {title, desc, stage, plan})
+                        axios.post('/projects/add', {title, desc, appArea, resources, stage, plan})
                             .then((res) => {
                                 navigate(`/projects/${res.data._id}`)
                             })

@@ -13,6 +13,7 @@
     "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
+    "jspdf": "^2.3.0",
     "mongoose": "^5.11.15",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -26,7 +27,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server": "npx nodemon --delay 10 --watch src/server src/server/app.js"
+    "server": "npx nodemon --delay 5 --watch src/server src/server/app.js"
   },
   "eslintConfig": {
     "extends": [

@@ -6,12 +6,10 @@ import {Layout} from "./components/Layout";
 import {Routes} from "./components/Router";
 
 ReactDOM.render(
-  <React.StrictMode>
-      <Layout>
-          <Routes/>
-      </Layout>
-  </React.StrictMode>,
-  document.getElementById('root')
+    <Layout>
+        <Routes/>
+    </Layout>,
+    document.getElementById('root')
 );
 
 // If you want to start measuring performance in your app, pass a function

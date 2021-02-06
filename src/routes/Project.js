@@ -1,7 +1,7 @@
 import {
     Avatar,
-    Box,
-    Card,
+    Box, Button,
+    Card, CardActions,
     CardContent,
     Grid,
     Step,
@@ -20,9 +20,18 @@ import Filter4Icon from '@material-ui/icons/Filter4'
 import Filter5Icon from '@material-ui/icons/Filter5'
 import clsx from "clsx"
 import {amber, green, lightGreen, lime, orange} from "@material-ui/core/colors"
-import {useEffect, useState} from "react"
+import {useContext, useEffect, useState} from "react"
 import axios from "axios"
 import DescriptionIcon from "@material-ui/icons/Description"
+import {UserContext} from "../components/Layout"
+import {jsPDF} from "jspdf"
+import '../fonts/PTSans-normal'
+import Avatar1 from "../img/avatar1.png"
+import Avatar2 from "../img/avatar2.png"
+import Avatar3 from "../img/avatar3.png"
+import Avatar4 from "../img/avatar4.png"
+import Avatar5 from "../img/avatar5.png"
+import Avatar6 from "../img/avatar6.png"
 
 const useStyles = makeStyles(theme => ({
     media: {
@@ -52,10 +61,12 @@ export const Project = withWidth()((props) => {
     const classes = useStyles()
 
     const [project, setProject] = useState({})
+    const [rating, setRating] = useState(0)
 
     useEffect(() => {
         axios.get(`/projects/get/${props.id}`).then((res) => {
             setProject(res.data[0])
+            setRating(res.data[0].rating ? res.data[0].rating.map(e => Object.values(e)[0]).reduce((total, e) => total + e, 0) / res.data[0].rating.length : 0)
         })
     }, [props.id])
 
@@ -134,7 +145,7 @@ export const Project = withWidth()((props) => {
     const UserInfo = (props) => (
         <Box display='flex'
              style={{alignItems: 'center', padding: 10, border: '1px solid rgba(0,0,0,0.2)', borderRadius: 5}}>
-            <Avatar alt="Remy Sharp" src="/"/>
+            <Avatar alt="Remy Sharp" src={props.avatar}/>
             <Typography style={{paddingLeft: 10}}>{props.name}</Typography>
         </Box>
     )
@@ -156,6 +167,8 @@ export const Project = withWidth()((props) => {
         'Стадия проработки 5',
     ]
 
+    const userInfo = useContext(UserContext)
+
     return (
         <Card>
             <img className={classes.media} src={Img} alt='wallpaper'/>
@@ -166,15 +179,24 @@ export const Project = withWidth()((props) => {
                         textAlign: 'center',
                         paddingBottom: 15
                     } : undefined}>
-                        <Typography variant="h5" style={{fontWeight: 'bold'}}>
+                        <Typography variant='h6' style={{fontWeight: 'bold'}}>
                             {project.title}
                         </Typography>
                     </div>
                     <Rating
                         name='name'
-                        defaultValue={4}
+                        value={rating}
                         precision={0.5}
                         size='large'
+                        onChange={(e, newValue) => {
+                            axios.post('/rate', {
+                                project_id: props.id,
+                                username: userInfo,
+                                score: newValue
+                            }).then(r => {
+                                setRating(r.data.rating)
+                            })
+                        }}
                     />
                 </Box>
 
@@ -196,7 +218,7 @@ export const Project = withWidth()((props) => {
                     <Typography className={classes.subtitle}>
                         Описание
                     </Typography>
-                    <Typography>
+                    <Typography style={{whiteSpace: 'pre-wrap'}}>
                         {project.desc}
                     </Typography>
                 </Block>
@@ -206,7 +228,7 @@ export const Project = withWidth()((props) => {
                         Область применения
                     </Typography>
                     <Typography>
-                        IT технологии
+                        {project.appArea || 'Информация отсутствует'}
                     </Typography>
                 </Block>
 
@@ -215,7 +237,7 @@ export const Project = withWidth()((props) => {
                         Необходимые ресурсы
                     </Typography>
                     <Typography>
-                        123
+                        {project.resources || 'Информация отсутствует'}
                     </Typography>
                 </Block>
 
@@ -294,7 +316,7 @@ export const Project = withWidth()((props) => {
                                     Оценка куратора
                                 </Typography>
                                 <Rating
-                                    defaultValue={4.5}
+                                    value={4}
                                     precision={0.5}
                                     size='large'
                                     readOnly
@@ -310,29 +332,52 @@ export const Project = withWidth()((props) => {
                 <Grid container spacing={1}>
                     <Grid container item xs={12} spacing={props.width === 'xs' ? 1 : 3}>
                         <Grid item xs={12} sm={6}>
-                            <UserInfo name='Пользователь 1'/>
+                            <UserInfo name='Пользователь 1' avatar={Avatar1}/>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <UserInfo name='Пользователь 2'/>
-                        </Grid>
-                    </Grid>
-                    <Grid container item xs={12} spacing={props.width === 'xs' ? 1 : 3}>
-                        <Grid item xs={12} sm={6}>
-                            <UserInfo name='Пользователь 3'/>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <UserInfo name='Пользователь 4'/>
+                            <UserInfo name='Пользователь 2' avatar={Avatar2}/>
                         </Grid>
                     </Grid>
                     <Grid container item xs={12} spacing={props.width === 'xs' ? 1 : 3}>
                         <Grid item xs={12} sm={6}>
-                            <UserInfo name='Пользователь 5'/>
+                            <UserInfo name='Пользователь 3' avatar={Avatar3}/>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <UserInfo name='Пользователь 6'/>
+                            <UserInfo name='Пользователь 4' avatar={Avatar4}/>
+                        </Grid>
+                    </Grid>
+                    <Grid container item xs={12} spacing={props.width === 'xs' ? 1 : 3}>
+                        <Grid item xs={12} sm={6}>
+                            <UserInfo name='Пользователь 5' avatar={Avatar5}/>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <UserInfo name='Пользователь 6' avatar={Avatar6}/>
                         </Grid>
                     </Grid>
                 </Grid>
+                <CardActions>
+                    <Button color='primary' onClick={() => {
+                        const doc = new jsPDF()
+                        doc.setFont('PTSans')
+                        doc.setFontSize(16)
+                        doc.text(project.title, 10, 15)
+                        doc.setFontSize(13)
+                        doc.text('Описание', 10, 30)
+                        doc.setFontSize(12)
+                        doc.text(doc.splitTextToSize(project.desc, 190), 10, 40)
+                        doc.setFontSize(13)
+                        doc.text('Область применения', 10, 140)
+                        doc.setFontSize(12)
+                        doc.text(doc.splitTextToSize(project.appArea, 190), 10, 150)
+                        doc.setFontSize(13)
+                        doc.text('Необходимые ресурсы', 10, 200)
+                        doc.setFontSize(12)
+                        doc.text(doc.splitTextToSize(project.resources, 190), 10, 210)
+                        doc.save(`${project.title}.pdf`)
+                    }}>
+                        Сохранить PDF
+                    </Button>
+                </CardActions>
             </CardContent>
         </Card>
     )

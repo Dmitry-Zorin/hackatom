@@ -25,7 +25,8 @@ const useStyles = makeStyles((theme) => ({
     },
     subheader: {
         padding: theme.spacing(1),
-        fontSize: 26,
+        fontSize: 32,
+        fontWeight: 300,
         textAlign: 'center'
     },
     icon: {
@@ -61,7 +62,7 @@ export const Projects = withWidth()((props) => {
                             title={tile.title} style={{borderTop: `3px solid ${colors[tile.stage]}`}}
                             subtitle={
                                 <Rating
-                                    defaultValue={2 + 3 * Math.random()}
+                                    value={tile.rating.map(e => Object.values(e)[0]).reduce((total, e) => total + e, 0) / tile.rating.length}
                                     precision={0.5}
                                     size={props.width === 'xs' ? 'small' : 'large'}
                                     readOnly

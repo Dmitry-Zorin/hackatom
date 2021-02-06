@@ -11,11 +11,21 @@ module.exports = new Schema(
             type: String,
             required: true,
         },
+        appArea: {
+            type: String,
+        },
+        resources: {
+            type: String,
+        },
         stage: {
             type: Number
         },
         plan: {
             type: String
+        },
+        rating: {
+            type: Object,
+            default: []
         }
     }
 )

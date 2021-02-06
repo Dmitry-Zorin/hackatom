@@ -1,20 +1,21 @@
-import React, {useState} from 'react'
+import React, {createContext, useState} from 'react'
 import {
-    AppBar, Box,
-    Button,
+    AppBar, Avatar, Box,
+    Button, Checkbox,
     Container, createMuiTheme, Dialog, DialogActions, DialogContent, DialogTitle,
-    fade,
+    fade, FormControlLabel,
     IconButton,
-    InputBase,
+    InputBase, Menu, MenuItem,
     MuiThemeProvider, TextField,
     Toolbar,
     Typography
 } from "@material-ui/core"
 import {makeStyles} from "@material-ui/core/styles"
 import SearchIcon from '@material-ui/icons/Search'
-import {NoteAdd, Apps} from "@material-ui/icons"
+import {NoteAdd, Apps, AccountCircle} from "@material-ui/icons"
 import {navigate} from "@reach/router"
 import ForumIcon from '@material-ui/icons/Forum'
+import axios from "axios";
 
 const useStyles = makeStyles((theme) => ({
     menuButton: {
@@ -70,6 +71,9 @@ const useStyles = makeStyles((theme) => ({
             padding: 50
         }
     },
+    icon: {
+        marginRight: 10
+    }
 }))
 
 const theme = createMuiTheme({
@@ -89,12 +93,18 @@ const theme = createMuiTheme({
     }
 })
 
+export const UserContext = createContext(0)
+
 export const Layout = (props) => {
     const classes = useStyles()
 
     const [open, setOpen] = useState(false)
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [user, setUser] = useState(localStorage.getItem('username'))
+    const [menu, setMenu] = useState(null)
+    const [info, setInfo] = useState('')
+    const [accept, setAccept] = useState(false)
 
     return (
         <MuiThemeProvider theme={theme}>
@@ -132,21 +142,57 @@ export const Layout = (props) => {
                         >
                             <ForumIcon/>
                         </IconButton>
-                        <IconButton
-                            className={classes.iconButton}
-                            color="inherit"
-                            onClick={() => navigate('/projects/create')}
-                        >
-                            <NoteAdd/>
-                        </IconButton>
-                        <Button className={classes.login} color="inherit" onClick={() => setOpen(true)}>
-                            Войти
-                        </Button>
+                        {user ? (
+                            <div>
+                                <IconButton
+                                    className={classes.iconButton}
+                                    color="inherit"
+                                    onClick={() => navigate('/projects/create')}
+                                >
+                                    <NoteAdd/>
+                                </IconButton>
+                                <IconButton
+                                    className={classes.iconButton}
+                                    color="inherit"
+                                    onClick={e => setMenu(e.currentTarget)}
+                                >
+                                    <AccountCircle/>
+                                </IconButton>
+                                <Menu
+                                    anchorEl={menu}
+                                    keepMounted
+                                    open={!!menu}
+                                    onClose={() => setMenu(null)}
+                                >
+                                    <MenuItem onClick={() => {
+                                        setMenu(null)
+                                        setInfo(user)
+                                    }}>
+                                        Аккаунт
+                                    </MenuItem>
+                                    <MenuItem onClick={() => {
+                                        setMenu(null)
+                                        setUser(undefined)
+                                        localStorage.removeItem('username')
+                                    }}>
+                                        Выйти
+                                    </MenuItem>
+                                </Menu>
+                            </div>
+                        ) : (
+                            <Button className={classes.login} color="inherit" onClick={() => {
+                                setOpen(true)
+                            }}>
+                                Войти
+                            </Button>
+                        )}
                     </Box>
                 </Toolbar>
             </AppBar>
             <Container maxWidth="md" style={{padding: 20}}>
-                {props.children}
+                <UserContext.Provider value={user}>
+                    {props.children}
+                </UserContext.Provider>
             </Container>
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth='sm'>
                 <DialogTitle>Логин</DialogTitle>
@@ -163,18 +209,70 @@ export const Layout = (props) => {
                         margin="dense"
                         label="Пароль"
                         fullWidth
+                        type='password'
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                     />
+                    <FormControlLabel
+                        control={(
+                            <Checkbox color="primary" checked={accept} onChange={e => setAccept(e.target.checked)}/>
+                        )}
+                        label={(
+                            <a href='http://www.consultant.ru/document/cons_doc_LAW_61801/6c94959bc017ac80140621762d2ac59f6006b08c/'
+                               target='blank'>
+                                Я согласен на обработку персональных данных
+                            </a>
+                        )}
+                    />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpen(false)} color="inherit">
+                    <Button color="inherit" onClick={() => {
+                        if (!accept) return alert('Требуется согласия на обработку персональных данных')
+                        setOpen(false)
+                        axios.post('/register', {username, password})
+                            .then(res => {
+                                if (res.data?.error) {
+                                    return alert(res.data.error)
+                                }
+                                setUser(res.data.username)
+                                localStorage.setItem('username', username)
+                            })
+                    }}>
                         Зарегистрироваться
                     </Button>
-                    <Button onClick={() => setOpen(false)} color="primary">
+                    <Button color="primary" onClick={() => {
+                        setOpen(false)
+                        axios.post('/authorize', {username, password})
+                            .then(res => {
+                                if (res.data?.error) {
+                                    return alert(res.data.error)
+                                }
+                                setUser(res.data.username)
+                                localStorage.setItem('username', username)
+                            })
+                    }}>
                         Войти
                     </Button>
                 </DialogActions>
+            </Dialog>
+            <Dialog open={!!info} onClose={() => setInfo('')} fullWidth maxWidth='sm'>
+                <DialogTitle>
+                    <Box display='flex'>
+                        <Avatar className={classes.icon}/>
+                        {info}
+                    </Box>
+                </DialogTitle>
+                <DialogContent style={{padding: 25, paddingTop: 0}}>
+                    <Typography variant='h6'>
+                        Контакты
+                    </Typography>
+                    <Typography>
+                        Телефон: +7(916)123-4567
+                    </Typography>
+                    <Typography>
+                        Telegram: @telegram
+                    </Typography>
+                </DialogContent>
             </Dialog>
         </MuiThemeProvider>
     )

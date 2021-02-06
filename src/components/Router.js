@@ -13,10 +13,10 @@ const ScrollToTop = ({children, location}) => {
 export const Routes = () => (
     <Router primary={false}>
         <ScrollToTop path="/">
-            <Projects path='/projects' default/>
+            <Projects path='/projects'/>
             <Project path='/projects/:id'/>
             <CreateProject path='/projects/create'/>
-            <NewsFeed path='/newsfeed'/>
+            <NewsFeed path='/newsfeed' default/>
         </ScrollToTop>
     </Router>
 )
